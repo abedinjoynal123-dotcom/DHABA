@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DHABA Tallinn — Asian Fusion Street Food</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --saffron:  #F4A800;
+      --ember:    #E04E1A;
+      --spice:    #B03010;
+      --night:    #0E0B08;
+      --charcoal: #1A1612;
+      --ash:      #2C2520;
+      --cream:    #FDF6EC;
+      --muted:    #9A8A78;
+      --white:    #FFFFFF;
+      --radius:   12px;
+      --font:     'Segoe UI', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--night);
+      color: var(--cream);
+      line-height: 1.6;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(14, 11, 8, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(244,168,0,.15);
+    }
+
+    .nav-logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: .05em;
+      color: var(--saffron);
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--white); }
+
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: .9rem;
+      font-weight: 500;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--saffron); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 40%, rgba(224,78,26,.18) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 50% at 80% 80%, rgba(244,168,0,.1) 0%, transparent 60%),
+        var(--night);
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle, rgba(244,168,0,.06) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    .badge-closed {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: rgba(224,78,26,.15);
+      border: 1px solid rgba(224,78,26,.4);
+      color: #FF7A4E;
+      padding: .4rem 1rem;
+      border-radius: 999px;
+      font-size: .82rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+    }
+
+    .badge-closed::before {
+      content: '';
+      width: 8px; height: 8px;
+      background: #FF4E1A;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px rgba(255,78,26,.3);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .3; }
+    }
+
+    .hero h1 {
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      font-weight: 900;
+      line-height: .95;
+      letter-spacing: -.02em;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 .highlight { color: var(--saffron); }
+
+    .hero-tagline {
+      font-size: clamp(1rem, 2.5vw, 1.3rem);
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .hero-cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .85rem 1.8rem;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform .2s, box-shadow .2s, opacity .2s;
+      cursor: pointer;
+      border: none;
+    }
+    .btn:hover { transform: translateY(-2px); opacity: .92; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--ember), var(--saffron));
+      color: var(--white);
+      box-shadow: 0 8px 24px rgba(224,78,26,.4);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--saffron);
+      border: 2px solid rgba(244,168,0,.4);
+    }
+    .btn-secondary:hover { border-color: var(--saffron); }
+
+    /* ── SECTION BASE ── */
+    section { padding: 5rem 2rem; }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    .section-label {
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--saffron);
+      margin-bottom: .6rem;
+    }
+
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      max-width: 560px;
+      font-size: 1.05rem;
+      margin-bottom: 3rem;
+    }
+
+    /* ── ABOUT ── */
+    .about { background: var(--charcoal); }
+
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-top: 2.5rem;
+    }
+
+    .value-card {
+      background: var(--ash);
+      border: 1px solid rgba(244,168,0,.1);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--cream);
+      transition: border-color .2s, background .2s;
+    }
+
+    .value-card:hover {
+      border-color: rgba(244,168,0,.4);
+      background: rgba(244,168,0,.06);
+    }
+
+    .value-card .icon { font-size: 1.4rem; }
+
+    /* ── MENU ── */
+    .menu { background: var(--night); }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .menu-card {
+      background: var(--charcoal);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: calc(var(--radius) * 1.5);
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform .25s, border-color .25s;
+    }
+
+    .menu-card::before {
+      content: attr(data-icon);
+      position: absolute;
+      right: -10px; top: -10px;
+      font-size: 5rem;
+      opacity: .07;
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(244,168,0,.25);
+    }
+
+    .menu-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .menu-name {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: .03em;
+      margin-bottom: .4rem;
+      color: var(--white);
+    }
+
+    .menu-desc { font-size: .9rem; color: var(--muted); }
+
+    /* ── ORDER ── */
+    .order { background: var(--charcoal); }
+
+    .order-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      max-width: 680px;
+    }
+
+    .order-card {
+      background: var(--ash);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: calc(var(--radius) * 1.5);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      transition: transform .25s, border-color .25s;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .order-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(244,168,0,.3);
+    }
+
+    .order-card .platform-name {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--white);
+    }
+
+    .order-card .platform-desc { font-size: .9rem; color: var(--muted); }
+
+    .order-card .order-arrow {
+      margin-top: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      color: var(--saffron);
+      font-weight: 700;
+      font-size: .95rem;
+    }
+
+    /* ── INFO STRIP ── */
+    .info-strip {
+      background: var(--ash);
+      border-top: 1px solid rgba(255,255,255,.05);
+      border-bottom: 1px solid rgba(255,255,255,.05);
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+    }
+
+    .info-block h3 {
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--saffron);
+      margin-bottom: .75rem;
+      font-weight: 700;
+    }
+
+    .info-block p, .info-block li {
+      font-size: .95rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .info-block li { list-style: none; }
+    .info-block li strong { color: var(--cream); }
+
+    /* ── FRANCHISE ── */
+    .franchise { background: var(--charcoal); }
+
+    .franchise-inner {
+      background: linear-gradient(135deg, var(--ash), rgba(244,168,0,.06));
+      border: 1px solid rgba(244,168,0,.18);
+      border-radius: calc(var(--radius) * 2);
+      padding: 3rem;
+    }
+
+    .franchise-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      margin-top: 2rem;
+    }
+
+    .franchise-list { list-style: none; display: flex; flex-direction: column; gap: .6rem; }
+    .franchise-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: .6rem;
+      color: var(--muted);
+      font-size: .95rem;
+    }
+    .franchise-list li::before {
+      content: '✓';
+      color: var(--saffron);
+      font-weight: 800;
+      flex-shrink: 0;
+      margin-top: .1rem;
+    }
+
+    /* ── CONTACT ── */
+    .contact { background: var(--night); }
+
+    .social-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .social-link {
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      background: var(--ash);
+      border: 1px solid rgba(255,255,255,.07);
+      color: var(--cream);
+      text-decoration: none;
+      padding: .7rem 1.2rem;
+      border-radius: var(--radius);
+      font-size: .9rem;
+      font-weight: 600;
+      transition: border-color .2s, background .2s;
+    }
+    .social-link:hover {
+      border-color: rgba(244,168,0,.4);
+      background: rgba(244,168,0,.06);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--charcoal);
+      border-top: 1px solid rgba(255,255,255,.06);
+      padding: 2rem;
+      text-align: center;
+      font-size: .85rem;
+      color: var(--muted);
+    }
+
+    footer span { color: var(--saffron); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      nav { padding: .9rem 1.2rem; }
+      .nav-links { display: none; }
+      section { padding: 3.5rem 1.2rem; }
+      .franchise-cols { grid-template-columns: 1fr; gap: 1.5rem; }
+      .franchise-inner { padding: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">DHABA <span>Tallinn</span></a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#menu">Menu</a></li>
+    <li><a href="#order">Order</a></li>
+    <li><a href="#franchise">Franchise</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="badge-closed">Temporarily Closed — Reopening Soon</div>
+  <h1>Bold <span class="highlight">Flavors.</span><br>Fresh Experience.</h1>
+  <p class="hero-tagline">Asian Fusion Street Food from the heart of Tallinn. Authentic spices. Modern craft. Unforgettable taste.</p>
+  <div class="hero-cta">
+    <a href="#menu" class="btn btn-primary">Explore Our Menu</a>
+    <a href="#order" class="btn btn-secondary">Order Online</a>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+  <div class="container">
+    <p class="section-label">Who We Are</p>
+    <h2 class="section-title">Asian Fusion Redefined</h2>
+    <p class="section-desc">DHABA Tallinn is a fast-growing Asian Fusion street food startup revolutionizing Tallinn's culinary scene. We combine traditional Indian spices with modern cooking techniques to create bold, unforgettable flavors.</p>
+
+    <div class="values-grid">
+      <div class="value-card"><span class="icon">🌿</span> Fresh ingredients daily</div>
+      <div class="value-card"><span class="icon">🔥</span> Authentic bold flavors</div>
+      <div class="value-card"><span class="icon">⭐</span> Quality in every dish</div>
+      <div class="value-card"><span class="icon">💡</span> Innovation & tradition</div>
+      <div class="value-card"><span class="icon">🏆</span> Premium ingredients</div>
+      <div class="value-card"><span class="icon">🌱</span> Vegan options available</div>
+    </div>
+  </div>
+</section>
+
+<!-- MENU -->
+<section class="menu" id="menu">
+  <div class="container">
+    <p class="section-label">What We Serve</p>
+    <h2 class="section-title">Our Menu</h2>
+    <p class="section-desc">Signature Asian Fusion dishes crafted with care — from hearty kebabs to plant-based favorites.</p>
+
+    <div class="menu-grid">
+      <div class="menu-card" data-icon="🥙">
+        <span class="menu-icon">🥙</span>
+        <div class="menu-name">Beef Kebab Series</div>
+        <div class="menu-desc">Wraps, tacos & rice bowls with authentic spices — our most popular classics.</div>
+      </div>
+      <div class="menu-card" data-icon="🍗">
+        <span class="menu-icon">🍗</span>
+        <div class="menu-name">Chicken Tikka Favorites</div>
+        <div class="menu-desc">Fries, salads & wraps packed with bold, smoky tikka flavors.</div>
+      </div>
+      <div class="menu-card" data-icon="🌱">
+        <span class="menu-icon">🌱</span>
+        <div class="menu-name">Vegan Beyond Meat</div>
+        <div class="menu-desc">Plant-based fusion perfection — rich flavors, zero compromise.</div>
+      </div>
+      <div class="menu-card" data-icon="🍟">
+        <span class="menu-icon">🍟</span>
+        <div class="menu-name">Crispy Asian Fries</div>
+        <div class="menu-desc">Golden fries dusted with our signature spice blends.</div>
+      </div>
+      <div class="menu-card" data-icon="🥗">
+        <span class="menu-icon">🥗</span>
+        <div class="menu-name">Fresh Fusion Salads</div>
+        <div class="menu-desc">Vibrant, healthy, and deliciously dressed — light but satisfying.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ORDER -->
+<section class="order" id="order">
+  <div class="container">
+    <p class="section-label">Delivered To You</p>
+    <h2 class="section-title">Order Online</h2>
+    <p class="section-desc">Get DHABA delivered straight to your door through your favorite platform.</p>
+
+    <div class="order-cards">
+      <a href="https://wolt.com/en/discovery" target="_blank" rel="noopener" class="order-card">
+        <div class="platform-name">🛫 Wolt</div>
+        <div class="platform-desc">Fast, reliable delivery via Wolt — track your order in real time.</div>
+        <span class="order-arrow">Order on Wolt →</span>
+      </a>
+      <a href="https://food.bolt.eu/en-us/" target="_blank" rel="noopener" class="order-card">
+        <div class="platform-name">🚗 Bolt Food</div>
+        <div class="platform-desc">Quick delivery via Bolt Food — great prices, speedy service.</div>
+        <span class="order-arrow">Order on Bolt Food →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- LOCATION & HOURS -->
+<section class="info-strip">
+  <div class="container">
+    <div class="info-grid">
+      <div class="info-block">
+        <h3>Location</h3>
+        <p>DHABA Kiosk<br>Tallinn, Estonia</p>
+      </div>
+      <div class="info-block">
+        <h3>Opening Hours</h3>
+        <ul>
+          <li><strong>Mon – Fri</strong> 11:00 – 20:00</li>
+          <li><strong>Saturday</strong> 12:00 – 21:00</li>
+          <li><strong>Sunday</strong> Closed</li>
+        </ul>
+      </div>
+      <div class="info-block">
+        <h3>Contact</h3>
+        <p><a href="mailto:info@dhaba-tallinn.ee" style="color:var(--saffron);text-decoration:none;">info@dhaba-tallinn.ee</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FRANCHISE -->
+<section class="franchise" id="franchise">
+  <div class="container">
+    <div class="franchise-inner">
+      <p class="section-label">Grow With Us</p>
+      <h2 class="section-title">Franchise Opportunities</h2>
+      <p class="section-desc" style="margin-bottom:0;">DHABA is expanding across Estonia and Europe. Join our success story with a proven fast-casual concept.</p>
+
+      <div class="franchise-cols">
+        <div>
+          <h3 style="color:var(--cream);font-size:1rem;margin-bottom:1rem;font-weight:700;">Key Benefits</h3>
+          <ul class="franchise-list">
+            <li>Low initial investment</li>
+            <li>Comprehensive training & support</li>
+            <li>Proven business model</li>
+            <li>Exclusive territory rights</li>
+            <li>Marketing & operational guidance</li>
+            <li>High-growth market opportunity</li>
+          </ul>
+        </div>
+        <div>
+          <h3 style="color:var(--cream);font-size:1rem;margin-bottom:1rem;font-weight:700;">Ideal Partner</h3>
+          <ul class="franchise-list">
+            <li>Passion for food & service</li>
+            <li>Business experience</li>
+            <li>Entrepreneurial mindset</li>
+          </ul>
+          <a href="mailto:info@dhaba-tallinn.ee" class="btn btn-primary" style="margin-top:2rem;">Let's Talk →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+  <div class="container">
+    <p class="section-label">Stay Connected</p>
+    <h2 class="section-title">Find Us Online</h2>
+    <p class="section-desc">Follow us on social media for reopening updates, new menu items, and behind-the-scenes content.</p>
+
+    <div class="social-links">
+      <a href="https://www.instagram.com/dhaba_tallinn" target="_blank" rel="noopener" class="social-link">📸 Instagram — @dhaba_tallinn</a>
+      <a href="https://www.facebook.com/DhabaTallinn" target="_blank" rel="noopener" class="social-link">👥 Facebook — /DhabaTallinn</a>
+      <a href="https://www.tiktok.com/@dhaba_tallinn" target="_blank" rel="noopener" class="social-link">🎵 TikTok — @dhaba_tallinn</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2025 <span>DHABA Tallinn</span> — Asian Fusion Street Food Kiosk | Authentic Flavors, Modern Taste</p>
+</footer>
+
+</body>
+</html>
