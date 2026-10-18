@@ -4,8 +4,7 @@
 //         lines: [{ item_id, variant_id, quantity, side, note }], note, lang }
 // Prices come from menu.json on the server; the browser's totals are ignored.
 import type { Config } from "@netlify/functions";
-import { OrderError, orderingClosedReason, priceOrder, type Lang, type OrderLineInput } from "../lib/catalog.mts";
-import { cleanPhone } from "../lib/assistant.mts";
+import { OrderError, cleanPhone, orderingClosedReason, priceOrder, type Lang, type OrderLineInput } from "../lib/catalog.mts";
 import { createOrder } from "../lib/orders-store.mts";
 
 const MAX_BODY_BYTES = 20_000;
