@@ -6,7 +6,7 @@ name: King's Food deploy & live test
 # - staff_pin: optional; enables the staff API checks and cleanup of the test order.
 on:
   # Pushes to this branch run the test without secrets: no deploy and no
-  # confirmed order (the AI is taken up to reading back the priced order).
+  # real test order (the order form API is checked with invalid input only).
   push:
     branches: [ci-live-test]
   workflow_dispatch:
@@ -75,7 +75,7 @@ jobs:
             if curl -fsS "$BASE_URL/" | grep -q "order.js"; then echo "Site is up."; exit 0; fi
             sleep 15
           done
-          echo "Site did not come up with the AI ordering version."; curl -sS -o /dev/null -w "HTTP %{http_code}\n" "$BASE_URL/"; exit 1
+          echo "Site did not come up with the order form version."; curl -sS -o /dev/null -w "HTTP %{http_code}\n" "$BASE_URL/"; exit 1
 
       - name: Live test
         run: |

@@ -17,7 +17,7 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
   status: Status;
-  channel: "web" | "chat" | "voice";
+  channel: "web";
   lang: Lang;
   customer: { name: string; phone: string };
   service: "takeaway" | "eat_in";

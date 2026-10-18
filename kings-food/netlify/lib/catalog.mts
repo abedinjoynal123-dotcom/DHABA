@@ -1,4 +1,4 @@
-// Menu and business details shared by the AI chat and the staff screen.
+// Menu and business details shared by the order form API and the staff screen.
 // Both files are the same ones the public website renders, so prices can
 // never differ between what customers see and what they are charged.
 import menuData from "../../public/assets/data/menu.json" with { type: "json" };
@@ -96,7 +96,7 @@ export const MAX_LINES = 30;
 
 // Prices an order strictly from the menu. Anything not on the menu, a wrong
 // size, a missing fries/rice choice or an odd quantity is rejected with a
-// message the assistant can relay to the customer.
+// message that can be shown to the customer.
 export function priceOrder(lines: OrderLineInput[], lang: Lang = "en"): PricedOrder {
   if (!Array.isArray(lines) || lines.length === 0) throw new OrderError("The order has no items.");
   if (lines.length > MAX_LINES) throw new OrderError(`An order can have at most ${MAX_LINES} lines.`);
@@ -145,6 +145,14 @@ export function priceOrder(lines: OrderLineInput[], lang: Lang = "en"): PricedOr
   });
 
   return { lines: priced, total: priced.reduce((sum, l) => sum + l.lineTotal, 0) };
+}
+
+// Accepts phone numbers like "+372 5123 4567" or "51234567"; null if invalid.
+export function cleanPhone(raw: string): string | null {
+  const trimmed = raw.trim();
+  const digits = trimmed.replace(/\D/g, "");
+  if (!/^\+?[\d\s()-]+$/.test(trimmed) || digits.length < 7 || digits.length > 15) return null;
+  return trimmed.replace(/\s+/g, " ");
 }
 
 // ---------- time and opening hours ----------
