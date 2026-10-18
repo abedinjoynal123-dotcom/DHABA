@@ -94,10 +94,17 @@ async function main() {
   const ask = await turn("Mis maksab suur kebab box?");
   record("AI quotes the large Kebab Box price (9,00 €)", ask.status === 200 && /9[,.]00|9 ?€|€ ?9/.test(ask.body.reply || ""), (ask.body.reply || "").slice(0, 120));
 
-  if (SKIP_ORDER) return;
-
   await turn("Soovin üks suur kebab box riisiga ja üks Fanta, kaasa.");
-  await turn("Nimi on Test Claude, telefon +372 5555 0000.");
+  const details = await turn("Nimi on Test Claude, telefon +372 5555 0000.");
+
+  if (SKIP_ORDER) {
+    // Stop before confirming: check the AI read back the exact server-priced total.
+    const quoted = /11[,.]50/.test(details.body?.reply || "") || history.some((m) =>
+      m.role === "user" && Array.isArray(m.content) && m.content.some((b) => b.type === "tool_result" && /11[,.]50/.test(String(b.content))));
+    record("AI priced the order at 11,50 € (not confirmed)", quoted && !order, (details.body?.reply || "").slice(0, 160));
+    return;
+  }
+
   for (let i = 0; i < 4 && !order; i++) {
     await turn(i === 0 ? "Jah, kinnitan." : "Jah, see on õige. Palun esitage tellimus.");
   }

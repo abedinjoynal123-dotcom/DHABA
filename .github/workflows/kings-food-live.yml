@@ -5,6 +5,10 @@ name: King's Food deploy & live test
 #   deploy-site tool. When given, the site is deployed first.
 # - staff_pin: optional; enables the staff API checks and cleanup of the test order.
 on:
+  # Pushes to this branch run the test without secrets: no deploy and no
+  # confirmed order (the AI is taken up to reading back the priced order).
+  push:
+    branches: [ci-live-test]
   workflow_dispatch:
     inputs:
       deploy_token:
@@ -69,5 +73,6 @@ jobs:
       - name: Live test
         run: |
           export STAFF_PIN=$(jq -r '.inputs.staff_pin // ""' "$GITHUB_EVENT_PATH")
-          if [ "$(jq -r '.inputs.place_test_order' "$GITHUB_EVENT_PATH")" = "false" ]; then export SKIP_ORDER=1; fi
+          # A confirmed test order is only placed when it can be cancelled again (PIN given).
+          if [ -z "$STAFF_PIN" ] || [ "$(jq -r '.inputs.place_test_order // "true"' "$GITHUB_EVENT_PATH")" = "false" ]; then export SKIP_ORDER=1; fi
           node scripts/live-test.mjs
