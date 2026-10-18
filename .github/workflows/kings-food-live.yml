@@ -1,0 +1,73 @@
+name: King's Food deploy & live test
+
+# Run manually from the Actions tab (or by Claude).
+# - deploy_token: optional one-time Netlify deploy path from the Netlify MCP
+#   deploy-site tool. When given, the site is deployed first.
+# - staff_pin: optional; enables the staff API checks and cleanup of the test order.
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_token:
+        description: "Netlify MCP proxy path (leave empty to only test)"
+        required: false
+        default: ""
+      staff_pin:
+        description: "Staff PIN for the order checks"
+        required: false
+        default: ""
+      place_test_order:
+        description: "Place and cancel one test order"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kings-food-live
+  cancel-in-progress: false
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: kings-food
+    env:
+      BASE_URL: https://kings-food-tallinn.netlify.app
+      SITE_ID: 4482531f-61da-4df5-ab88-4f14d799ab04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Inputs are read from the event file so they never appear in the log.
+      - name: Mask inputs
+        run: |
+          for key in deploy_token staff_pin; do
+            value=$(jq -r --arg k "$key" '.inputs[$k] // ""' "$GITHUB_EVENT_PATH")
+            if [ -n "$value" ]; then echo "::add-mask::$value"; fi
+          done
+
+      - name: Deploy to Netlify
+        run: |
+          token=$(jq -r '.inputs.deploy_token // ""' "$GITHUB_EVENT_PATH")
+          if [ -z "$token" ]; then echo "No deploy token given; testing the current deploy."; exit 0; fi
+          npx -y @netlify/mcp@latest --site-id "$SITE_ID" --proxy-path "$token"
+
+      - name: Wait for the site
+        run: |
+          for i in $(seq 1 40); do
+            if curl -fsS "$BASE_URL/" | grep -q "Telli vestluses"; then echo "Site is up."; exit 0; fi
+            sleep 15
+          done
+          echo "Site did not come up with the AI ordering version."; curl -sS -o /dev/null -w "HTTP %{http_code}\n" "$BASE_URL/"; exit 1
+
+      - name: Live test
+        run: |
+          export STAFF_PIN=$(jq -r '.inputs.staff_pin // ""' "$GITHUB_EVENT_PATH")
+          if [ "$(jq -r '.inputs.place_test_order' "$GITHUB_EVENT_PATH")" = "false" ]; then export SKIP_ORDER=1; fi
+          node scripts/live-test.mjs
