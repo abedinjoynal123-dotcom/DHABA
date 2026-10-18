@@ -62,9 +62,16 @@ jobs:
           if [ -z "$token" ]; then echo "No deploy token given; testing the current deploy."; exit 0; fi
           npx -y @netlify/mcp@latest --site-id "$SITE_ID" --proxy-path "$token"
 
+      - name: Netlify deploy status
+        run: |
+          badge=$(curl -fsS "https://api.netlify.com/api/v1/badges/$SITE_ID/deploy-status" || true)
+          status=$(printf '%s' "$badge" | grep -oiE '>(success|failed|building|enqueued|canceled|cancelled|not found|unknown|error)<' | head -1 | tr -d '<>')
+          echo "Netlify deploy status: ${status:-unreadable}"
+          printf '%s' "$badge" | grep -oE '<title>[^<]*</title>' | head -1 || true
+
       - name: Wait for the site
         run: |
-          for i in $(seq 1 40); do
+          for i in $(seq 1 8); do
             if curl -fsS "$BASE_URL/" | grep -q "order.js"; then echo "Site is up."; exit 0; fi
             sleep 15
           done
