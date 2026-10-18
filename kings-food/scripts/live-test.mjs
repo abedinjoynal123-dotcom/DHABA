@@ -41,7 +41,7 @@ async function main() {
   // ---------- pages ----------
   const home = await get("/");
   record("Home page loads", home.status === 200 && home.text.includes("King's Food"), `HTTP ${home.status}`);
-  record("Home page has chat ordering", home.text.includes("Telli vestluses") && home.text.includes("chat.js"));
+  record("Home page has order form and chat", home.text.includes("order.js") && home.text.includes("chat.js"));
   record("Phone number on page", home.text.includes("+372 5559 2222"));
 
   const menu = await get("/assets/data/menu.json");
@@ -51,6 +51,15 @@ async function main() {
 
   const staff = await get("/staff/");
   record("Staff page loads", staff.status === 200, `HTTP ${staff.status}`);
+
+  // ---------- order form API (validation only, no order is created) ----------
+  const badCheckout = await fetch(`${BASE}/api/checkout`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ customer: { name: "Test", phone: "abc" }, service: "takeaway", lines: [{ item_id: "water", variant_id: "regular", quantity: 1 }] }),
+  });
+  const badBody = await badCheckout.json().catch(() => ({}));
+  record("Order form API validates input", badCheckout.status === 400 && badBody.error === "phone_invalid", `HTTP ${badCheckout.status} ${JSON.stringify(badBody)}`);
 
   // ---------- staff API ----------
   const noPin = await get("/api/orders");

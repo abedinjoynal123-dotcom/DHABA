@@ -65,7 +65,7 @@ jobs:
       - name: Wait for the site
         run: |
           for i in $(seq 1 40); do
-            if curl -fsS "$BASE_URL/" | grep -q "Telli vestluses"; then echo "Site is up."; exit 0; fi
+            if curl -fsS "$BASE_URL/" | grep -q "order.js"; then echo "Site is up."; exit 0; fi
             sleep 15
           done
           echo "Site did not come up with the AI ordering version."; curl -sS -o /dev/null -w "HTTP %{http_code}\n" "$BASE_URL/"; exit 1
