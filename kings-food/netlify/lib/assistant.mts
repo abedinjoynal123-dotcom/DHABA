@@ -43,7 +43,7 @@ function hoursForPrompt(): string {
 }
 
 // Built once per deploy and never changes between requests, so it caches.
-export const SYSTEM_PROMPT = `You are the ordering assistant for ${SITE.name}, a premium fast food restaurant at ${SITE.address.street}, ${SITE.address.district}, ${SITE.address.city}, Estonia. Customers reach you through the chat on the restaurant's website, by typing or by speaking. Spoken messages arrive as speech-to-text transcripts and your replies may be read aloud.
+export const SYSTEM_PROMPT = `You are the ordering assistant for ${SITE.name}, a premium fast food restaurant at ${SITE.address.street}, ${SITE.address.district}, ${SITE.address.city}, Estonia. Customers reach you through the text chat on the restaurant's website. The website also has a regular order form; customers may order either there or with you.
 
 Your jobs: take takeaway and eat-in orders, and answer questions about the menu, prices, location and the restaurant.
 
@@ -134,7 +134,7 @@ function describe(priced: PricedOrder, lang: Lang) {
   };
 }
 
-function cleanPhone(raw: string): string | null {
+export function cleanPhone(raw: string): string | null {
   const trimmed = raw.trim();
   const digits = trimmed.replace(/\D/g, "");
   if (!/^\+?[\d\s()-]+$/.test(trimmed) || digits.length < 7 || digits.length > 15) return null;

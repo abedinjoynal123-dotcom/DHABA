@@ -19,7 +19,9 @@
       "hero.eyebrow": "Premium kiirtoit · Nõmme, Tallinn",
       "hero.tagline": "Koge premium-kiirtoidu kuninglikku maitset",
       "hero.cta_menu": "Vaata menüüd",
-      "hero.cta_order": "Telli vestluses",
+      "hero.cta_order": "Telli kohe",
+      "hero.cta_ask": "Küsi assistendilt",
+      "menu.add": "Lisa",
       "hero.call": "Või helista",
       "hero.cta_directions": "Juhised kohale",
       "menu.eyebrow": "Meie menüü",
@@ -65,7 +67,9 @@
       "hero.eyebrow": "Premium fast food · Nõmme, Tallinn",
       "hero.tagline": "Experience the Royal taste of Premium Fast Food",
       "hero.cta_menu": "View menu",
-      "hero.cta_order": "Order by chat",
+      "hero.cta_order": "Order now",
+      "hero.cta_ask": "Ask the assistant",
+      "menu.add": "Add",
       "hero.call": "Or call",
       "hero.cta_directions": "Get directions",
       "menu.eyebrow": "Our menu",
@@ -159,6 +163,13 @@
     row.appendChild(name);
     row.appendChild(el("span", "menu-leader"));
     row.appendChild(el("span", "menu-price", priceLabel(item)));
+    var add = el("button", "menu-add");
+    add.type = "button";
+    add.innerHTML = '<span aria-hidden="true">+</span>';
+    add.appendChild(el("span", "menu-add-text", " " + t("menu.add")));
+    add.setAttribute("data-add", item.id);
+    add.setAttribute("aria-label", t("menu.add") + ": " + local(item.name));
+    row.appendChild(add);
     li.appendChild(row);
 
     if (item.description) {

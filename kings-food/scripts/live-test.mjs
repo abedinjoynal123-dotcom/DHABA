@@ -41,7 +41,7 @@ async function main() {
   // ---------- pages ----------
   const home = await get("/");
   record("Home page loads", home.status === 200 && home.text.includes("King's Food"), `HTTP ${home.status}`);
-  record("Home page has chat ordering", home.text.includes("Telli vestluses") && home.text.includes("chat.js"));
+  record("Home page has order form and chat", home.text.includes("order.js") && home.text.includes("chat.js"));
   record("Phone number on page", home.text.includes("+372 5559 2222"));
 
   const menu = await get("/assets/data/menu.json");
@@ -51,6 +51,15 @@ async function main() {
 
   const staff = await get("/staff/");
   record("Staff page loads", staff.status === 200, `HTTP ${staff.status}`);
+
+  // ---------- order form API (validation only, no order is created) ----------
+  const badCheckout = await fetch(`${BASE}/api/checkout`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ customer: { name: "Test", phone: "abc" }, service: "takeaway", lines: [{ item_id: "water", variant_id: "regular", quantity: 1 }] }),
+  });
+  const badBody = await badCheckout.json().catch(() => ({}));
+  record("Order form API validates input", badCheckout.status === 400 && badBody.error === "phone_invalid", `HTTP ${badCheckout.status} ${JSON.stringify(badBody)}`);
 
   // ---------- staff API ----------
   const noPin = await get("/api/orders");
@@ -94,10 +103,17 @@ async function main() {
   const ask = await turn("Mis maksab suur kebab box?");
   record("AI quotes the large Kebab Box price (9,00 €)", ask.status === 200 && /9[,.]00|9 ?€|€ ?9/.test(ask.body.reply || ""), (ask.body.reply || "").slice(0, 120));
 
-  if (SKIP_ORDER) return;
-
   await turn("Soovin üks suur kebab box riisiga ja üks Fanta, kaasa.");
-  await turn("Nimi on Test Claude, telefon +372 5555 0000.");
+  const details = await turn("Nimi on Test Claude, telefon +372 5555 0000.");
+
+  if (SKIP_ORDER) {
+    // Stop before confirming: check the AI read back the exact server-priced total.
+    const quoted = /11[,.]50/.test(details.body?.reply || "") || history.some((m) =>
+      m.role === "user" && Array.isArray(m.content) && m.content.some((b) => b.type === "tool_result" && /11[,.]50/.test(String(b.content))));
+    record("AI priced the order at 11,50 € (not confirmed)", quoted && !order, (details.body?.reply || "").slice(0, 160));
+    return;
+  }
+
   for (let i = 0; i < 4 && !order; i++) {
     await turn(i === 0 ? "Jah, kinnitan." : "Jah, see on õige. Palun esitage tellimus.");
   }
