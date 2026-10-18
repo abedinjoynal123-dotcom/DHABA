@@ -2,13 +2,14 @@
 //
 //   BASE_URL=https://kings-food-tallinn.netlify.app STAFF_PIN=... node scripts/live-test.mjs
 //
-// Checks the pages and staff API, then has a real conversation with the AI
-// assistant in Estonian, places one test order, finds it on the staff API and
-// cancels it so it does not count in sales. Exits non-zero on any failure.
+// Checks the pages, the order form API and the staff API. With a staff PIN
+// (and SKIP_ORDER unset) it also places one real test order through the order
+// form API, finds it on the staff API and cancels it so it does not count in
+// sales. Exits non-zero on any failure.
 
 const BASE = (process.env.BASE_URL || "https://kings-food-tallinn.netlify.app").replace(/\/$/, "");
 const PIN = process.env.STAFF_PIN || "";
-const SKIP_ORDER = process.env.SKIP_ORDER === "1";
+const SKIP_ORDER = process.env.SKIP_ORDER === "1" || !PIN;
 
 let failures = 0;
 const results = [];
@@ -25,15 +26,25 @@ async function get(path, headers = {}) {
   return { status: res.status, text };
 }
 
-async function chat(history, text) {
-  const res = await fetch(`${BASE}/api/chat`, {
+async function checkout(body) {
+  const res = await fetch(`${BASE}/api/checkout`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ history, text, lang: "et", channel: "chat" }),
+    body: JSON.stringify(body),
   });
-  const body = await res.json().catch(() => ({}));
-  return { status: res.status, body };
+  return { status: res.status, body: await res.json().catch(() => ({})) };
 }
+
+const TEST_ORDER = {
+  customer: { name: "Test Claude", phone: "+372 5555 0000" },
+  service: "takeaway",
+  lang: "et",
+  note: "Automaattest, tühistatakse kohe",
+  lines: [
+    { item_id: "kebab-box", variant_id: "large", quantity: 1, side: "rice", note: null },
+    { item_id: "soft-drinks", variant_id: "fanta", quantity: 1, side: null, note: null },
+  ],
+};
 
 async function main() {
   console.log(`Testing ${BASE}\n`);
@@ -41,7 +52,7 @@ async function main() {
   // ---------- pages ----------
   const home = await get("/");
   record("Home page loads", home.status === 200 && home.text.includes("King's Food"), `HTTP ${home.status}`);
-  record("Home page has order form and chat", home.text.includes("order.js") && home.text.includes("chat.js"));
+  record("Home page has the order form", home.text.includes("order.js"));
   record("Phone number on page", home.text.includes("+372 5559 2222"));
 
   const menu = await get("/assets/data/menu.json");
@@ -52,14 +63,11 @@ async function main() {
   const staff = await get("/staff/");
   record("Staff page loads", staff.status === 200, `HTTP ${staff.status}`);
 
-  // ---------- order form API (validation only, no order is created) ----------
-  const badCheckout = await fetch(`${BASE}/api/checkout`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ customer: { name: "Test", phone: "abc" }, service: "takeaway", lines: [{ item_id: "water", variant_id: "regular", quantity: 1 }] }),
-  });
-  const badBody = await badCheckout.json().catch(() => ({}));
-  record("Order form API validates input", badCheckout.status === 400 && badBody.error === "phone_invalid", `HTTP ${badCheckout.status} ${JSON.stringify(badBody)}`);
+  // ---------- order form API (validation, nothing is saved) ----------
+  const bad = await checkout({ ...TEST_ORDER, customer: { name: "Test", phone: "abc" } });
+  record("Order form rejects a bad phone number", bad.status === 400 && bad.body.error === "phone_invalid", `HTTP ${bad.status} ${JSON.stringify(bad.body)}`);
+  const badItem = await checkout({ ...TEST_ORDER, lines: [{ item_id: "pizza", variant_id: "regular", quantity: 1 }] });
+  record("Order form rejects items not on the menu", badItem.status === 400 && badItem.body.error === "invalid_order", `HTTP ${badItem.status}`);
 
   // ---------- staff API ----------
   const noPin = await get("/api/orders");
@@ -69,69 +77,21 @@ async function main() {
     record("Orders API accepts staff PIN", withPin.status === 200, `HTTP ${withPin.status} ${withPin.status === 200 ? "" : withPin.text.slice(0, 120)}`);
   }
 
-  // ---------- AI conversation ----------
-  console.log("\n--- AI conversation (Estonian) ---");
-  let history = [];
-  let order = null;
-
-  const turn = async (text) => {
-    const started = Date.now();
-    const r = await chat(history, text);
-    const secs = ((Date.now() - started) / 1000).toFixed(1);
-    console.log(`\nCustomer: ${text}`);
-    if (r.status !== 200) {
-      console.log(`  -> HTTP ${r.status} ${JSON.stringify(r.body)} (${secs}s)`);
-      return r;
-    }
-    console.log(`Assistant (${secs}s): ${r.body.reply}`);
-    history = r.body.history;
-    if (r.body.order) {
-      order = r.body.order;
-      console.log(`  ORDER PLACED: #${order.number}, total ${(order.total / 100).toFixed(2)} €`);
-    }
-    return r;
-  };
-
-  const first = await turn("Tere! Mis teil menüüs on?");
-  if (first.status === 503 && first.body.error === "not_configured") {
-    record("AI assistant configured", false, "ANTHROPIC_API_KEY is not set on Netlify");
-    return;
-  }
-  record("AI answers a menu question", first.status === 200 && !!first.body.reply, `HTTP ${first.status}`);
-  if (first.status !== 200) return;
-
-  const ask = await turn("Mis maksab suur kebab box?");
-  record("AI quotes the large Kebab Box price (9,00 €)", ask.status === 200 && /9[,.]00|9 ?€|€ ?9/.test(ask.body.reply || ""), (ask.body.reply || "").slice(0, 120));
-
-  await turn("Soovin üks suur kebab box riisiga ja üks Fanta, kaasa.");
-  const details = await turn("Nimi on Test Claude, telefon +372 5555 0000.");
-
   if (SKIP_ORDER) {
-    // Stop before confirming: check the AI read back the exact server-priced total.
-    const quoted = /11[,.]50/.test(details.body?.reply || "") || history.some((m) =>
-      m.role === "user" && Array.isArray(m.content) && m.content.some((b) => b.type === "tool_result" && /11[,.]50/.test(String(b.content))));
-    record("AI priced the order at 11,50 € (not confirmed)", quoted && !order, (details.body?.reply || "").slice(0, 160));
+    console.log("\nNo staff PIN given: skipped placing a real test order.");
     return;
   }
 
-  for (let i = 0; i < 4 && !order; i++) {
-    await turn(i === 0 ? "Jah, kinnitan." : "Jah, see on õige. Palun esitage tellimus.");
-  }
-
-  record("AI placed the order after confirmation", !!order, order ? `#${order.number}` : "no order");
+  // ---------- real order, then cancel ----------
+  const placed = await checkout(TEST_ORDER);
+  const order = placed.body.order;
+  record("Order form places an order", placed.status === 200 && /^\d{3}$/.test(order?.number ?? ""), `HTTP ${placed.status} ${order ? "#" + order.number : JSON.stringify(placed.body)}`);
   if (!order) return;
   record("Order total is exactly 11,50 €", order.total === 1150, `${order.total} cents`);
 
-  // ---------- staff side ----------
-  if (!PIN) return;
   const list = await get("/api/orders", { "x-staff-pin": PIN });
   let saved = null;
-  let date = null;
-  try {
-    const data = JSON.parse(list.text);
-    date = data.date;
-    saved = data.orders.find((o) => o.number === order.number);
-  } catch {}
+  try { saved = JSON.parse(list.text).orders.find((o) => o.number === order.number); } catch {}
   record("Order appears on staff screen", !!saved && saved.status === "new" && saved.total === 1150 && saved.customer.name === "Test Claude",
     saved ? `status ${saved.status}, ${saved.lines.length} lines, ${saved.service}` : "not found");
 
@@ -139,7 +99,7 @@ async function main() {
     const res = await fetch(`${BASE}/api/orders`, {
       method: "PATCH",
       headers: { "content-type": "application/json", "x-staff-pin": PIN },
-      body: JSON.stringify({ date: saved.date || date, number: saved.number, status: "cancelled" }),
+      body: JSON.stringify({ date: saved.date, number: saved.number, status: "cancelled" }),
     });
     const body = await res.json().catch(() => ({}));
     record("Test order cancelled", res.status === 200 && body.order?.status === "cancelled", `HTTP ${res.status}`);
