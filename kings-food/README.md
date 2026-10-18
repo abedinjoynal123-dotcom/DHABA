@@ -1,39 +1,64 @@
-# King's Food — Website
+# King's Food — Website & AI ordering
 
-Premium Fast Food · Pärnu mnt 326, Nõmme, Tallinn · Est. 2026
+Premium Fast Food · Pärnu mnt 326, Nõmme, Tallinn · +372 5559 2222 · Est. 2026
 
-A static, dependency-free website (HTML/CSS/JS) with a royal red & gold theme and an ivory menu card. Bilingual: Estonian (default) and English.
+- **Website** (`public/`): bilingual (Estonian/English) royal red & gold site with the ivory menu card.
+- **AI ordering assistant** (`/api/chat`): customers order and ask questions by typing or talking. It prices every order from the menu file, confirms it with the customer and sends it to the kitchen.
+- **Staff orders screen** (`/staff/`): PIN-protected list of incoming orders with status buttons and the day's sales. This is the start of the POS.
 
-## Run locally
+## How it fits together
 
-```bash
-cd kings-food
-python3 -m http.server 8000
-# open http://localhost:8000
+```
+public/                     static website (Netlify publish directory)
+  assets/data/menu.json     the menu: single source of truth for site, AI and orders
+  assets/data/site.json     phone, address, hours, ordering on/off, payment note
+  assets/js/main.js         renders the site and menu
+  assets/js/chat.js         chat + voice widget
+  staff/index.html          staff orders screen
+netlify/functions/chat.mts  POST /api/chat, the ordering assistant (Claude)
+netlify/functions/orders.mts GET/PATCH /api/orders, staff API
+netlify/lib/                menu pricing, order storage, assistant prompt and tools
 ```
 
-## Deploy
+- The assistant runs on Claude (`claude-opus-5-5`) with two tools: `price_order` (exact itemized total from `menu.json`) and `place_order` (saves the order). The server validates every item, size, side and quantity and computes the price itself, so the AI cannot charge a wrong amount or invent an item.
+- Voice uses the browser's built-in speech recognition and speech synthesis (Chrome, Edge, Safari, Android, iPhone). Firefox gets text chat only. Estonian speech output depends on the device having an Estonian voice; without one, replies appear as text.
+- Orders are stored in Netlify Blobs in the EU (`eu-central-1`), one record per order under its Tallinn date. Order numbers are 3 digits, unique per day.
 
-No build step. Upload the `kings-food/` folder as-is to any static host (Netlify, GitHub Pages, Cloudflare Pages, Vercel).
+## Setup on Netlify (one time)
+
+1. **Link the repo.** In the Netlify project go to Project configuration → Build & deploy → Link repository → `abedinjoynal123-dotcom/DHABA`. Branch `main`, **Base directory `kings-food`**. Leave the build command and publish directory empty; `netlify.toml` sets them.
+2. **Add environment variables** (Project configuration → Environment variables, scope must include **Functions**):
+   - `ANTHROPIC_API_KEY`: your key from https://console.anthropic.com (mark as secret).
+   - `STAFF_PIN`: the PIN staff type on `/staff/` (use at least 6 digits).
+3. Redeploy (Deploys → Trigger deploy) so the functions pick up the variables.
+
+Until `ANTHROPIC_API_KEY` is set, the chat tells customers to call the phone number instead.
+
+## Daily use
+
+- Staff open `https://<your-site>/staff/` on a tablet or phone, enter the PIN and keep it open. New orders appear within 10 seconds; turn **Sound** on for a chime.
+- Status flow: New → Preparing → Ready → Handed over, or Cancelled. Sales totals exclude cancelled orders.
 
 ## Editing content
 
 | What | File |
 | --- | --- |
-| Menu items, prices, variants | `assets/js/menu-data.js` |
-| Phone, email, opening hours, social links, Wolt/Bolt links | `assets/js/site-config.js` |
-| Page text (ET/EN) | `STRINGS` in `assets/js/main.js` |
-| Colours and layout | `assets/css/styles.css` |
+| Menu items, prices (in cents: `790` = 7,90 €), sizes | `public/assets/data/menu.json` |
+| Phone, email, opening hours, socials, Wolt/Bolt, ordering on/off, payment note | `public/assets/data/site.json` |
+| Website text (ET/EN) | `STRINGS` in `public/assets/js/main.js` |
+| Chat text (ET/EN) | `STRINGS` in `public/assets/js/chat.js` |
+| Assistant behaviour | `netlify/lib/assistant.mts` |
 
-Empty fields in `site-config.js` are hidden on the page, so no placeholder is ever published.
+- `"available": false` on a menu item hides it from the site and the assistant (sold out).
+- Opening hours, e.g. `"hours": { "mon": ["11:00", "21:00"], "sun": "closed" }`. Once set, the assistant refuses orders outside them and the site shows them.
+- `"ordering": { "enabled": false }` stops AI orders immediately (after redeploy).
 
-Prices are stored in **euro cents** (`790` = 7,90 €).
+## Development
 
-## Ready for the POS
-
-`menu-data.js` is the single source of truth for the menu and is structured for the upcoming phone POS:
-
-- stable `id` on every category, item and variant (use these in order lines and sales records)
-- the price sits on the variant (e.g. Kebab Box small/large, Burger/Kebab burger)
-- `options` for free choices that don't change the price (fries or rice)
-- `available: false` on an item hides it from the menu (sold-out toggle)
+```bash
+cd kings-food
+npm install
+npm test            # pricing, opening hours and the full chat flow (Claude simulated)
+npm run typecheck
+npx netlify dev     # run site + functions locally (needs ANTHROPIC_API_KEY and STAFF_PIN in .env)
+```

@@ -1,0 +1,30 @@
+{
+  "name": "King's Food",
+  "tagline": "Premium Fast Food",
+  "established": 2026,
+  "address": {
+    "street": "Pärnu mnt 326",
+    "district": "Nõmme",
+    "city": "Tallinn",
+    "country": "EE"
+  },
+  "phone": "+372 5559 2222",
+  "email": "",
+  "hours": {},
+  "social": {
+    "instagram": "",
+    "facebook": "",
+    "tiktok": ""
+  },
+  "delivery": {
+    "wolt": "",
+    "bolt": ""
+  },
+  "ordering": {
+    "enabled": true,
+    "payment": {
+      "et": "Tasumine toimub tellimuse kättesaamisel.",
+      "en": "Payment is made when you collect your order."
+    }
+  }
+}
