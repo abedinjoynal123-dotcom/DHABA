@@ -1,0 +1,18 @@
+{
+  "name": "kings-food",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types --experimental-test-module-mocks --no-warnings netlify/lib/*.test.mts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
+    "@netlify/blobs": "^11.1.4"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^6.0.2",
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2"
+  }
+}

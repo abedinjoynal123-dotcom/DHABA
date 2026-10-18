@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="et">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>King's Food — Tellimused</title>
+  <meta name="theme-color" content="#5c0a11">
+  <link rel="icon" type="image/png" sizes="64x64" href="../assets/img/favicon-64.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red-950: #2e0408; --red-900: #44070c; --red-800: #5c0a11; --red-700: #7a1019;
+      --gold-200: #f6e6bd; --gold-300: #ecd394; --gold-400: #ddb76a; --gold-500: #c9a04f; --gold-600: #a37a32;
+      --ivory: #fbf7ee; --ink: #2b1810; --ink-soft: #5d4537;
+      --gold-gradient: linear-gradient(135deg, #f8e7b5 0%, #d9b061 38%, #a77c30 62%, #f1d48c 100%);
+      --s-new: #b3261e; --s-preparing: #b26a00; --s-ready: #1e7a3c; --s-completed: #5d4537; --s-cancelled: #8a8a8a;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: var(--red-900); color: var(--gold-200); font: 16px/1.5 "Lato", system-ui, sans-serif; }
+    h1, h2, h3 { font-family: "Cinzel", serif; margin: 0; letter-spacing: 0.04em; }
+    button, input, select { font: inherit; }
+    :focus-visible { outline: 2px solid var(--gold-300); outline-offset: 2px; }
+    [hidden] { display: none !important; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+    .bar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); background: var(--red-950); border-bottom: 1px solid rgba(221,183,106,.3); }
+    .bar img { width: 40px; height: 40px; }
+    .bar h1 { font-size: 1.05rem; text-transform: uppercase; color: var(--gold-300); margin-right: auto; }
+    .bar label { font-size: .85rem; color: var(--gold-300); display: flex; align-items: center; gap: 6px; }
+    .bar input[type=date] { padding: 6px 8px; border: 1px solid var(--gold-600); border-radius: 6px; background: var(--red-900); color: var(--gold-200); }
+    .btn { min-height: 40px; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--gold-500); background: transparent; color: var(--gold-200); font-weight: 700; cursor: pointer; }
+    .btn-gold { background: var(--gold-gradient); color: var(--red-950); border-color: var(--gold-600); }
+    .btn:disabled { opacity: .5; cursor: default; }
+
+    main { padding: 20px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); max-width: 1280px; margin: 0 auto; }
+
+    .login { max-width: 360px; margin: 12vh auto 0; padding: 32px 28px; background: var(--ivory); color: var(--ink); border-radius: 12px; border: 1px solid var(--gold-500); text-align: center; }
+    .login img { width: 96px; margin: 0 auto 12px; display: block; }
+    .login h2 { color: var(--red-800); font-size: 1.2rem; text-transform: uppercase; margin-bottom: 18px; }
+    .login input { width: 100%; padding: 12px; border: 1px solid var(--gold-600); border-radius: 8px; font-size: 1.4rem; text-align: center; letter-spacing: .3em; background: #fff; color: var(--ink); }
+    .login .btn { width: 100%; margin-top: 12px; }
+    .login .err { color: #a3241a; min-height: 1.5em; margin: 10px 0 0; font-size: .9rem; }
+
+    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat { padding: 14px 16px; border: 1px solid rgba(221,183,106,.35); border-radius: 10px; background: rgba(0,0,0,.15); }
+    .stat span { display: block; font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-400); }
+    .stat strong { display: block; margin-top: 4px; font-family: "Cinzel", serif; font-size: 1.6rem; color: var(--gold-200); font-variant-numeric: tabular-nums; }
+
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .filters button { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--gold-600); background: transparent; color: var(--gold-200); cursor: pointer; font-weight: 700; font-size: .88rem; }
+    .filters button[aria-pressed=true] { background: var(--gold-gradient); color: var(--red-950); }
+
+    .orders { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; align-items: start; }
+    .order { background: var(--ivory); color: var(--ink); border-radius: 10px; border: 1px solid var(--gold-500); overflow: hidden; }
+    .order.is-fresh { box-shadow: 0 0 0 3px var(--gold-300); }
+    .order-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-left: 6px solid var(--status, var(--s-new)); }
+    .order-num { font-family: "Cinzel", serif; font-size: 1.8rem; color: var(--red-800); font-variant-numeric: tabular-nums; }
+    .order-meta { flex: 1; min-width: 0; font-size: .85rem; color: var(--ink-soft); }
+    .order-meta strong { display: block; color: var(--ink); font-size: 1rem; overflow-wrap: anywhere; }
+    .pill { padding: 3px 10px; border-radius: 999px; background: var(--status); color: #fff; font-size: .75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+    .order ul { list-style: none; margin: 0; padding: 10px 14px; border-top: 1px dashed rgba(122,16,25,.25); }
+    .order li { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; font-variant-numeric: tabular-nums; }
+    .order li small { display: block; color: var(--ink-soft); }
+    .order .note { margin: 0; padding: 8px 14px; background: #fff3d6; font-size: .9rem; }
+    .order-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 14px; border-top: 1px dashed rgba(122,16,25,.25); }
+    .order-total { margin-right: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .order-foot .btn { min-height: 36px; padding: 6px 12px; color: var(--red-800); border-color: var(--gold-600); }
+    .order-foot .btn-gold { color: var(--red-950); }
+    .order-foot a { color: var(--red-700); font-weight: 700; font-size: .9rem; }
+
+    .empty { padding: 40px 20px; text-align: center; border: 1px dashed rgba(221,183,106,.4); border-radius: 12px; color: var(--gold-300); }
+    .status-line { font-size: .8rem; color: var(--gold-400); margin: 0 0 12px; }
+    .status-line.err { color: #ffb4a8; }
+  </style>
+</head>
+<body>
+  <header class="bar">
+    <img src="../assets/img/logo-256.webp" alt="" width="40" height="40">
+    <h1 data-t="title">Tellimused</h1>
+    <label id="date-wrap" hidden><span data-t="date">Kuupäev</span> <input type="date" id="date"></label>
+    <button type="button" class="btn" id="sound" aria-pressed="false" hidden data-t="soundOff">Heli: väljas</button>
+    <button type="button" class="btn" id="lang">EN</button>
+    <button type="button" class="btn" id="logout" hidden data-t="logout">Logi välja</button>
+  </header>
+
+  <main>
+    <form class="login" id="login">
+      <img src="../assets/img/logo-256.webp" alt="" width="96" height="96">
+      <h2 data-t="loginTitle">Personali sisselogimine</h2>
+      <label class="sr-only" for="pin" data-t="pin">PIN-kood</label>
+      <input id="pin" type="password" inputmode="numeric" autocomplete="current-password" required>
+      <button class="btn btn-gold" type="submit" data-t="login">Logi sisse</button>
+      <p class="err" id="login-err" role="alert"></p>
+    </form>
+
+    <section id="board" hidden>
+      <p class="status-line" id="status-line" role="status"></p>
+      <div class="summary" id="summary"></div>
+      <div class="filters" id="filters" role="group"></div>
+      <div class="orders" id="orders"></div>
+    </section>
+  </main>
+
+  <script>
+  (function () {
+    "use strict";
+    var API = "/api/orders";
+    var POLL_MS = 10000;
+    var PIN_KEY = "kf-staff-pin";
+    var LANG_KEY = "kf-staff-lang";
+
+    var T = {
+      et: {
+        title: "Tellimused", date: "Kuupäev", logout: "Logi välja", loginTitle: "Personali sisselogimine", pin: "PIN-kood", login: "Logi sisse",
+        wrongPin: "Vale PIN-kood.", notConfigured: "Personali PIN pole seadistatud (STAFF_PIN).", netErr: "Ühendus puudub. Proovin uuesti…",
+        updated: "Uuendatud", orders: "Tellimusi", sales: "Müük", open: "Pooleli", avg: "Keskmine tellimus",
+        all: "Kõik", new: "Uus", preparing: "Valmistamisel", ready: "Valmis", completed: "Üle antud", cancelled: "Tühistatud",
+        toPreparing: "Alusta", toReady: "Valmis", toCompleted: "Üle antud", cancel: "Tühista", reopen: "Taasta",
+        takeaway: "Kaasa", eat_in: "Kohapeal", voice: "hääl", chat: "vestlus", empty: "Selle päeva tellimusi pole.",
+        soundOn: "Heli: sees", soundOff: "Heli: väljas", salesNote: "Müük ei sisalda tühistatud tellimusi."
+      },
+      en: {
+        title: "Orders", date: "Date", logout: "Log out", loginTitle: "Staff login", pin: "PIN code", login: "Log in",
+        wrongPin: "Wrong PIN.", notConfigured: "Staff PIN is not set up (STAFF_PIN).", netErr: "No connection. Retrying…",
+        updated: "Updated", orders: "Orders", sales: "Sales", open: "In progress", avg: "Average order",
+        all: "All", new: "New", preparing: "Preparing", ready: "Ready", completed: "Handed over", cancelled: "Cancelled",
+        toPreparing: "Start", toReady: "Ready", toCompleted: "Handed over", cancel: "Cancel", reopen: "Restore",
+        takeaway: "Takeaway", eat_in: "Eat in", voice: "voice", chat: "chat", empty: "No orders for this day.",
+        soundOn: "Sound: on", soundOff: "Sound: off", salesNote: "Sales exclude cancelled orders."
+      }
+    };
+    var NEXT = { "new": ["preparing", "toPreparing"], preparing: ["ready", "toReady"], ready: ["completed", "toCompleted"] };
+    var STATUS_ORDER = ["new", "preparing", "ready", "completed", "cancelled"];
+
+    var lang = get(LANG_KEY) === "en" ? "en" : "et";
+    var pin = get(PIN_KEY, true) || "";
+    var date = "";
+    var today = "";
+    var orders = [];
+    var seen = null;
+    var fresh = {};
+    var filter = "active";
+    var timer = null;
+    var sound = false;
+    var audioCtx = null;
+
+    function get(k, session) { try { return (session ? sessionStorage : localStorage).getItem(k); } catch (e) { return null; } }
+    function set(k, v, session) { try { (session ? sessionStorage : localStorage)[v === null ? "removeItem" : "setItem"](k, v); } catch (e) {} }
+    function t(k) { return T[lang][k] || k; }
+    function $(id) { return document.getElementById(id); }
+    function euro(c) { return new Intl.NumberFormat(lang === "et" ? "et-EE" : "en-IE", { style: "currency", currency: "EUR" }).format(c / 100); }
+    function time(iso) { return new Intl.DateTimeFormat(lang === "et" ? "et-EE" : "en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Tallinn" }).format(new Date(iso)); }
+    function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+
+    function applyLang() {
+      document.documentElement.lang = lang;
+      document.title = "King's Food — " + t("title");
+      document.querySelectorAll("[data-t]").forEach(function (n) { n.textContent = t(n.getAttribute("data-t")); });
+      $("lang").textContent = lang === "et" ? "EN" : "ET";
+      $("sound").textContent = t(sound ? "soundOn" : "soundOff");
+      render();
+    }
+
+    function api(method, body, query) {
+      return fetch(API + (query || ""), {
+        method: method,
+        headers: Object.assign({ "x-staff-pin": pin }, body ? { "content-type": "application/json" } : {}),
+        body: body ? JSON.stringify(body) : undefined,
+        cache: "no-store"
+      }).then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) { return { status: res.status, data: data }; });
+      });
+    }
+
+    function beep() {
+      if (!sound) return;
+      try {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        [0, 0.25].forEach(function (offset) {
+          var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+          o.frequency.value = 880; o.connect(g); g.connect(audioCtx.destination);
+          var s = audioCtx.currentTime + offset;
+          g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(0.3, s + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, s + 0.2);
+          o.start(s); o.stop(s + 0.22);
+        });
+      } catch (e) {}
+    }
+
+    function load() {
+      var q = date ? "?date=" + encodeURIComponent(date) : "";
+      return api("GET", null, q).then(function (r) {
+        if (r.status === 401) return logout(t("wrongPin"));
+        if (r.status === 503) return logout(t("notConfigured"));
+        if (r.status !== 200) throw new Error("status " + r.status);
+        today = r.data.today;
+        if (!date) { date = r.data.date; $("date").value = date; }
+        if (r.data.date !== date) return;
+        var list = r.data.orders || [];
+        var key = r.data.date;
+        if (seen && seen.date === key) {
+          var isNew = list.filter(function (o) { return !seen.numbers[o.number]; });
+          if (isNew.length) { isNew.forEach(function (o) { fresh[o.number] = true; }); beep(); }
+        }
+        seen = { date: key, numbers: {} };
+        list.forEach(function (o) { seen.numbers[o.number] = true; });
+        orders = list;
+        $("status-line").className = "status-line";
+        $("status-line").textContent = t("updated") + " " + time(new Date().toISOString());
+        render();
+      }).catch(function () {
+        $("status-line").className = "status-line err";
+        $("status-line").textContent = t("netErr");
+      });
+    }
+
+    function startBoard() {
+      $("login").hidden = true;
+      $("board").hidden = false;
+      $("date-wrap").hidden = false;
+      $("logout").hidden = false;
+      $("sound").hidden = false;
+      clearInterval(timer);
+      load();
+      timer = setInterval(function () { if (!document.hidden) load(); }, POLL_MS);
+    }
+
+    function logout(message) {
+      clearInterval(timer);
+      pin = "";
+      set(PIN_KEY, null, true);
+      orders = []; seen = null;
+      $("board").hidden = true;
+      $("date-wrap").hidden = true;
+      $("logout").hidden = true;
+      $("sound").hidden = true;
+      $("login").hidden = false;
+      $("login-err").textContent = message || "";
+      $("pin").value = "";
+      $("pin").focus();
+    }
+
+    function changeStatus(order, status) {
+      var buttons = document.querySelectorAll('[data-num="' + order.number + '"] button');
+      buttons.forEach(function (b) { b.disabled = true; });
+      api("PATCH", { date: order.date, number: order.number, status: status }).then(function (r) {
+        if (r.status === 401) return logout(t("wrongPin"));
+        if (r.status === 200) {
+          delete fresh[order.number];
+          orders = orders.map(function (o) { return o.number === order.number ? r.data.order : o; });
+        }
+        render();
+      }).catch(function () { render(); });
+    }
+
+    function render() {
+      if ($("board").hidden) return;
+      var counted = orders.filter(function (o) { return o.status !== "cancelled"; });
+      var sales = counted.reduce(function (s, o) { return s + o.total; }, 0);
+      var openCount = orders.filter(function (o) { return ["new", "preparing", "ready"].indexOf(o.status) !== -1; }).length;
+
+      var summary = $("summary");
+      summary.textContent = "";
+      [[t("orders"), String(counted.length)], [t("sales"), euro(sales)], [t("open"), String(openCount)], [t("avg"), counted.length ? euro(Math.round(sales / counted.length)) : "–"]]
+        .forEach(function (s) { var d = el("div", "stat"); d.appendChild(el("span", null, s[0])); d.appendChild(el("strong", null, s[1])); summary.appendChild(d); });
+      summary.title = t("salesNote");
+
+      var filters = $("filters");
+      filters.textContent = "";
+      [["active", t("open")], ["all", t("all")]].concat(STATUS_ORDER.map(function (s) { return [s, t(s)]; })).forEach(function (f) {
+        var count = f[0] === "all" ? orders.length : f[0] === "active" ? openCount : orders.filter(function (o) { return o.status === f[0]; }).length;
+        var b = el("button", null, f[1] + " (" + count + ")");
+        b.type = "button";
+        b.setAttribute("aria-pressed", String(filter === f[0]));
+        b.addEventListener("click", function () { filter = f[0]; render(); });
+        filters.appendChild(b);
+      });
+
+      var list = orders.filter(function (o) {
+        if (filter === "all") return true;
+        if (filter === "active") return ["new", "preparing", "ready"].indexOf(o.status) !== -1;
+        return o.status === filter;
+      }).slice().sort(function (a, b) {
+        var d = STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status);
+        return d || a.createdAt.localeCompare(b.createdAt);
+      });
+
+      var root = $("orders");
+      root.textContent = "";
+      if (!list.length) { root.appendChild(el("p", "empty", t("empty"))); return; }
+
+      list.forEach(function (o) {
+        var card = el("article", "order" + (fresh[o.number] ? " is-fresh" : ""));
+        card.setAttribute("data-num", o.number);
+        card.style.setProperty("--status", "var(--s-" + o.status + ")");
+
+        var head = el("div", "order-head");
+        head.appendChild(el("span", "order-num", o.number));
+        var meta = el("div", "order-meta");
+        meta.appendChild(el("strong", null, o.customer.name));
+        meta.appendChild(document.createTextNode(time(o.createdAt) + " · " + t(o.service) + " · " + t(o.channel)));
+        head.appendChild(meta);
+        head.appendChild(el("span", "pill", t(o.status)));
+        card.appendChild(head);
+
+        var ul = el("ul");
+        o.lines.forEach(function (l) {
+          var li = el("li");
+          var left = el("span", null, l.quantity + " × " + l.name + (l.variantName ? " (" + l.variantName + ")" : ""));
+          var extra = [l.sideName, l.note].filter(Boolean).join(" · ");
+          if (extra) left.appendChild(el("small", null, extra));
+          li.appendChild(left);
+          li.appendChild(el("span", null, euro(l.lineTotal)));
+          ul.appendChild(li);
+        });
+        card.appendChild(ul);
+        if (o.note) card.appendChild(el("p", "note", o.note));
+
+        var foot = el("div", "order-foot");
+        foot.appendChild(el("span", "order-total", euro(o.total)));
+        var tel = el("a", null, o.customer.phone);
+        tel.href = "tel:" + o.customer.phone.replace(/[^\d+]/g, "");
+        foot.appendChild(tel);
+        if (NEXT[o.status]) {
+          var next = el("button", "btn btn-gold", t(NEXT[o.status][1]));
+          next.type = "button";
+          next.addEventListener("click", function () { changeStatus(o, NEXT[o.status][0]); });
+          foot.appendChild(next);
+        }
+        if (o.status === "new" || o.status === "preparing") {
+          var cancel = el("button", "btn", t("cancel"));
+          cancel.type = "button";
+          cancel.addEventListener("click", function () { changeStatus(o, "cancelled"); });
+          foot.appendChild(cancel);
+        }
+        if (o.status === "cancelled") {
+          var reopen = el("button", "btn", t("reopen"));
+          reopen.type = "button";
+          reopen.addEventListener("click", function () { changeStatus(o, "new"); });
+          foot.appendChild(reopen);
+        }
+        card.appendChild(foot);
+        root.appendChild(card);
+      });
+    }
+
+    $("login").addEventListener("submit", function (e) {
+      e.preventDefault();
+      pin = $("pin").value.trim();
+      if (!pin) return;
+      $("login-err").textContent = "";
+      api("GET", null, "").then(function (r) {
+        if (r.status === 200) { set(PIN_KEY, pin, true); date = ""; startBoard(); }
+        else if (r.status === 503) $("login-err").textContent = t("notConfigured");
+        else $("login-err").textContent = t("wrongPin");
+      }).catch(function () { $("login-err").textContent = t("netErr"); });
+    });
+    $("logout").addEventListener("click", function () { logout(""); });
+    $("lang").addEventListener("click", function () { lang = lang === "et" ? "en" : "et"; set(LANG_KEY, lang); applyLang(); });
+    $("sound").addEventListener("click", function () {
+      sound = !sound;
+      $("sound").setAttribute("aria-pressed", String(sound));
+      $("sound").textContent = t(sound ? "soundOn" : "soundOff");
+      if (sound) beep();
+    });
+    $("date").addEventListener("change", function () {
+      date = $("date").value || today;
+      seen = null; fresh = {};
+      load();
+    });
+
+    applyLang();
+    if (pin) startBoard(); else $("pin").focus();
+  })();
+  </script>
+</body>
+</html>

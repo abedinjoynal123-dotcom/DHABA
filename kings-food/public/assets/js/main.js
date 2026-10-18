@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  var MENU = window.KF_MENU;
-  var CONFIG = window.KF_CONFIG;
+  var MENU = null;
+  var CONFIG = null;
   var STORAGE_KEY = "kf-lang";
   var LANGS = ["et", "en"];
 
@@ -19,12 +19,15 @@
       "hero.eyebrow": "Premium kiirtoit · Nõmme, Tallinn",
       "hero.tagline": "Koge premium-kiirtoidu kuninglikku maitset",
       "hero.cta_menu": "Vaata menüüd",
+      "hero.cta_order": "Telli vestluses",
+      "hero.call": "Või helista",
       "hero.cta_directions": "Juhised kohale",
       "menu.eyebrow": "Meie menüü",
       "menu.title": "Kuninglik valik",
       "menu.note": "Hinnad eurodes, sisaldavad käibemaksu.",
       "menu.featured": "Lemmik",
       "menu.choice": "valikus",
+      "menu.error": "Menüüd ei õnnestunud laadida. Palun värskendage lehte.",
       "opening.eyebrow": "Suur avamine",
       "opening.title": "Olete südamest oodatud suurejoonelisele avapeole",
       "opening.venue": "Toimumiskoht",
@@ -62,12 +65,15 @@
       "hero.eyebrow": "Premium fast food · Nõmme, Tallinn",
       "hero.tagline": "Experience the Royal taste of Premium Fast Food",
       "hero.cta_menu": "View menu",
+      "hero.cta_order": "Order by chat",
+      "hero.call": "Or call",
       "hero.cta_directions": "Get directions",
       "menu.eyebrow": "Our menu",
       "menu.title": "The Royal Selection",
       "menu.note": "Prices in euros, VAT included.",
       "menu.featured": "Favourite",
       "menu.choice": "choice of",
+      "menu.error": "The menu could not be loaded. Please refresh the page.",
       "opening.eyebrow": "Grand opening",
       "opening.title": "You are cordially invited to the Grand Celebration",
       "opening.venue": "Venue",
@@ -211,7 +217,7 @@
 
   function renderHours() {
     var root = document.getElementById("hours");
-    if (!root) return;
+    if (!root || !CONFIG) return;
     root.textContent = "";
     var hours = CONFIG.hours || {};
     var days = DAY_ORDER.filter(function (d) { return hours[d]; });
@@ -305,6 +311,7 @@
     renderMenu();
     renderHours();
     syncNavToggleLabel();
+    document.dispatchEvent(new CustomEvent("kf:lang", { detail: { lang: lang } }));
   }
 
   function initialLanguage() {
@@ -367,7 +374,29 @@
   if (year) year.textContent = String(new Date().getFullYear());
 
   initNav();
-  renderContact();
-  renderSocialAndDelivery();
   applyLanguage(initialLanguage());
+
+  function loadJSON(url) {
+    return fetch(url, { cache: "no-cache" }).then(function (res) {
+      if (!res.ok) throw new Error(url + " " + res.status);
+      return res.json();
+    });
+  }
+
+  Promise.all([loadJSON("assets/data/menu.json"), loadJSON("assets/data/site.json")])
+    .then(function (data) {
+      MENU = data[0];
+      CONFIG = data[1];
+      window.KF_MENU = MENU;
+      window.KF_CONFIG = CONFIG;
+      renderContact();
+      renderSocialAndDelivery();
+      applyLanguage(currentLang);
+      document.dispatchEvent(new CustomEvent("kf:ready"));
+    })
+    .catch(function (err) {
+      console.error("Could not load menu", err);
+      var root = document.getElementById("menu-list");
+      if (root) root.textContent = t("menu.error");
+    });
 })();
