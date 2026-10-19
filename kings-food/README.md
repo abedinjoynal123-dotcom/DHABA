@@ -1,8 +1,8 @@
 # King's Food — Website & online ordering
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/4482531f-61da-4df5-ab88-4f14d799ab04/deploy-status)](https://app.netlify.com/projects/kings-food-tallinn/deploys)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/4482531f-61da-4df5-ab88-4f14d799ab04/deploy-status)](https://app.netlify.com/projects/kingsfoodeatonia/deploys)
 
-Live site: https://kings-food-tallinn.netlify.app · Staff screen: https://kings-food-tallinn.netlify.app/staff/
+Live site: https://kingsfoodeatonia.netlify.app · Staff screen: https://kingsfoodeatonia.netlify.app/staff/
 
 Premium Fast Food · Pärnu mnt 326, Nõmme, Tallinn · +372 5559 2222 · Est. 2026
 

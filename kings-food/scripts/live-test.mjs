@@ -1,13 +1,13 @@
 // Live test of the deployed King's Food site.
 //
-//   BASE_URL=https://kings-food-tallinn.netlify.app STAFF_PIN=... node scripts/live-test.mjs
+//   BASE_URL=https://kingsfoodeatonia.netlify.app STAFF_PIN=... node scripts/live-test.mjs
 //
 // Checks the pages, the order form API and the staff API. With a staff PIN
 // (and SKIP_ORDER unset) it also places one real test order through the order
 // form API, finds it on the staff API and cancels it so it does not count in
 // sales. Exits non-zero on any failure.
 
-const BASE = (process.env.BASE_URL || "https://kings-food-tallinn.netlify.app").replace(/\/$/, "");
+const BASE = (process.env.BASE_URL || "https://kingsfoodeatonia.netlify.app").replace(/\/$/, "");
 const PIN = process.env.STAFF_PIN || "";
 const SKIP_ORDER = process.env.SKIP_ORDER === "1" || !PIN;
 

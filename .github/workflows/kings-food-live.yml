@@ -39,7 +39,7 @@ jobs:
       run:
         working-directory: kings-food
     env:
-      BASE_URL: https://kings-food-tallinn.netlify.app
+      BASE_URL: https://kingsfoodeatonia.netlify.app
       SITE_ID: 4482531f-61da-4df5-ab88-4f14d799ab04
     steps:
       - uses: actions/checkout@v4
