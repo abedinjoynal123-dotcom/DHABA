@@ -23,6 +23,11 @@ on:
         description: "Place and cancel one test order"
         type: boolean
         default: true
+      target:
+        description: "Which Netlify project to deploy and test"
+        type: choice
+        options: [production, pos-preview]
+        default: production
 
 permissions:
   contents: read
@@ -39,8 +44,9 @@ jobs:
       run:
         working-directory: kings-food
     env:
-      BASE_URL: https://kings-food-tallinn.netlify.app
-      SITE_ID: 4482531f-61da-4df5-ab88-4f14d799ab04
+      # pos-preview is a separate test project with its own data, used to try the POS before going live.
+      BASE_URL: ${{ inputs.target == 'pos-preview' && 'https://kings-food-pos-preview.netlify.app' || 'https://kings-food-tallinn.netlify.app' }}
+      SITE_ID: ${{ inputs.target == 'pos-preview' && 'e9ee28f9-c64c-4587-bf1c-242a902b0ad9' || '4482531f-61da-4df5-ab88-4f14d799ab04' }}
     steps:
       - uses: actions/checkout@v4
 
