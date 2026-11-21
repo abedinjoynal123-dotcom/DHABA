@@ -14,10 +14,12 @@
   [headers.values]
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "microphone=(), camera=(), geolocation=()"
+    # The POS (/staff/) uses the microphone for voice input; nothing else asks for it.
+    Permissions-Policy = "microphone=(self), camera=(self), geolocation=()"
 
 [[headers]]
   for = "/staff/*"
   [headers.values]
     X-Robots-Tag = "noindex"
     X-Frame-Options = "DENY"
+    Cache-Control = "no-cache"

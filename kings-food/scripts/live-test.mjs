@@ -62,6 +62,13 @@ async function main() {
 
   const staff = await get("/staff/");
   record("Staff page loads", staff.status === 200, `HTTP ${staff.status}`);
+  record("Staff page is the POS", staff.text.includes("KF_NET") && staff.text.includes("King's Food POS"));
+
+  // ---------- POS API: a browser that isn't paired gets nothing ----------
+  const boot = await get("/api/pos/boot");
+  record("POS boot answers unpaired devices", boot.status === 200 && boot.text.includes('"paired":false'), `HTTP ${boot.status} ${boot.text.slice(0, 80)}`);
+  const posData = await fetch(`${BASE}/api/pos/data`, { method: "POST", headers: { "content-type": "application/json", "x-kf": "1" }, body: '{"keys":{"c/menu":""}}' });
+  record("POS data refused without pairing", posData.status === 401, `HTTP ${posData.status}`);
 
   // ---------- order form API (validation, nothing is saved) ----------
   const bad = await checkout({ ...TEST_ORDER, customer: { name: "Test", phone: "abc" } });

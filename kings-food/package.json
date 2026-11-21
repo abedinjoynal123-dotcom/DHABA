@@ -4,7 +4,10 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --test --experimental-strip-types --experimental-test-module-mocks --no-warnings netlify/lib/*.test.mts"
+    "test": "node --test --experimental-strip-types --experimental-test-module-mocks --no-warnings netlify/lib/*.test.mts",
+    "build:pos": "node pos/build.mjs",
+    "dev:pos": "node --experimental-strip-types --experimental-test-module-mocks --no-warnings scripts/pos-dev-server.mjs",
+    "test:pos-e2e": "node scripts/pos-e2e.mjs"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.4"
